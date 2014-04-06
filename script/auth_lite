@@ -1,0 +1,122 @@
+#!/usr/bin/env perl
+use utf8;
+use strict;
+use warnings;
+
+use Mojolicious::Lite;
+use Data::Dumper;
+
+use FindBin;
+my $db_path;
+BEGIN {
+	unshift @INC, "$FindBin::Bin/../lib";
+	$db_path = "$FindBin::Bin/../data/auth.db";
+}
+
+use Auth::DB;
+use Auth::Model::Users;
+
+# Documentation browser under "/perldoc"
+plugin 'PODRenderer';
+
+helper 'db' => sub {
+	my ($self) = @_;
+	my $db = Auth::DB->new(+{
+			connect_info => [
+				"dbi:SQLite:$db_path",
+				'',
+				'',
+			]
+		});
+	return $db;
+};
+
+helper 'users' => sub {
+	my ($self) = @_;
+	my $db = $self->db;
+	my $users = Auth::Model::Users->new($db);
+	return $users;
+};
+
+group {
+	under sub {
+		my $self = shift;
+		if (!$self->session('user')) {
+			$self->redirect_to('login');
+		}
+		return 1;
+	};
+
+	get '/restricted/' => sub {
+		my $self = shift;
+		my $user_id = $self->session('user');
+		my $user = $self->users->single($user_id);
+		print Dumper $user;
+		$self->stash('user' => $user);
+		$self->render('restricted');
+	} => 'restricted';
+
+};
+
+get '/' => sub {
+  my $self = shift;
+  $self->render('index');
+} => 'index';
+
+get '/login' => sub {
+  my $self = shift;
+  $self->render('login');
+} => 'login';
+
+post '/login' => sub {
+  my $self = shift;
+	my $user_id = $self->param("user_id");
+	my $password = $self->param("password");
+
+	if ($self->users->validate($user_id, $password)) {
+		# ログイン成功
+		$self->session('user' => $user_id);
+		$self->users->login($user_id);
+		$self->redirect_to('restricted');
+	} else {
+		# ログイン失敗
+		$self->flash('login_result' => 'IDかパスワードが間違っているです。');
+		$self->redirect_to('login');
+	}
+};
+
+app->start;
+
+__DATA__
+
+@@ index.html.ep
+% layout 'default';
+% title 'ようこそ';
+ようこそようこそ。
+<a href="<%= url_for("login") %>">ログイン</a>
+
+@@ login.html.ep
+% layout 'default';
+% title 'ログイン';
+ログインログイン
+% if (my $res = flash 'login_result') {
+<b><%= $res %></b>
+% }
+<form method="post">
+<input type="text" name="user_id" />
+<input type="password" name="password" />
+<button type="submit" >ログインー</button>
+</form>
+
+@@ restricted.html.ep
+% layout 'default';
+% title 'Welcome';
+ようこそ <%= session('user') %>ーサン。
+ログイン日時は <%= $user->last_login_at %> です。
+
+@@ layouts/default.html.ep
+<!DOCTYPE html>
+<html>
+  <head><title><%= title %></title></head>
+  <body><%= content %></body>
+</html>

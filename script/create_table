@@ -1,0 +1,31 @@
+#!/usr/bin/env perl
+use utf8;
+use strict;
+use warnings;
+
+use FindBin;
+BEGIN { unshift @INC, "$FindBin::Bin/../lib" }
+
+use Auth::DB;
+use Auth::Model::Users;
+
+my $path = "$FindBin::Bin/../data/auth.db";
+my $db = Auth::DB->new(+{
+		connect_info => [
+			"dbi:SQLite:$path",
+			'',
+			'',
+		]
+	});
+
+$db->do(q{
+	CREATE TABLE IF NOT EXISTS users (
+		user_id VARCHAR NOT NULL PRIMARY KEY,
+		password VARCHAR NOT NULL,
+		last_login_at DATETIME
+	)
+});
+
+my $user = Auth::Model::Users->new($db);
+$user->insert('neguse', 'hogehoge');
+

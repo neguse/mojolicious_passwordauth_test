@@ -4,12 +4,13 @@
 
 # 使い方
 [Carton](https://github.com/miyagawa/carton)が使える環境で、以下のコマンドを実行します。
+
     # モジュールのインストール
     carton install
-		# テーブルの作成
+    # テーブルの作成
     carton exec perl script/create_table
-		# アプリの起動
-		carton exec morbo script/auth_lite
+    # アプリの起動
+    carton exec morbo script/auth_lite
 
 # TODO
 * ドキュメンテーション

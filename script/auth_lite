@@ -42,6 +42,7 @@ group {
 		my $self = shift;
 		if (!$self->session('user')) {
 			$self->redirect_to('login');
+			return undef;
 		}
 		return 1;
 	};

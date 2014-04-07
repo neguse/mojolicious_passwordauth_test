@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Mojolicious::Lite;
-use Data::Dumper;
 
 use FindBin;
 my $db_path;
@@ -51,7 +50,6 @@ group {
 		my $self = shift;
 		my $user_id = $self->session('user');
 		my $user = $self->users->single($user_id);
-		print Dumper $user;
 		$self->stash('user' => $user);
 		$self->render('restricted');
 	} => 'restricted';
